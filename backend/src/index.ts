@@ -1,6 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import { initDB, checkDBHealth, getDBStats } from './db.js';
 
 dotenv.config();
 
@@ -19,8 +20,26 @@ if (!PORT) {
 app.use(express.json());
 
 // API Routes
-app.get('/api/health', (req, res) => {
-  res.status(200).json({ message: 'OK' });
+app.get('/api/health', async (req, res) => {
+  try {
+    const dbHealthy = await checkDBHealth();
+    const stats = dbHealthy ? await getDBStats() : { total: 0 };
+
+    res.status(200).json({
+      message: 'OK',
+      database: {
+        connected: dbHealthy,
+        totalCVEs: stats.total
+      },
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: 'Health check failed',
+      database: { connected: false },
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
 });
 
 app.get('/api/cves', (req, res) => {
@@ -44,7 +63,22 @@ app.use((req: any, res: any) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-// Start the server
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
+// Initialize database and start server
+const startServer = async () => {
+  try {
+    // Initialize database
+    await initDB();
+    console.log('Database initialized successfully');
+
+    // Start the server
+    app.listen(PORT, () => {
+      console.log(`Server is running on http://localhost:${PORT}`);
+      console.log(`Database path: ${process.env.DB_PATH || './data/cves.db'}`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+};
+
+startServer();
