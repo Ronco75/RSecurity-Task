@@ -18,14 +18,31 @@ if (!PORT) {
 
 app.use(express.json());
 
-app.get('/', (req, res) => {
-  res.json({ message: 'Hello World!' });
-});
-
-app.get('/health', (req, res) => {
+// API Routes
+app.get('/api/health', (req, res) => {
   res.status(200).json({ message: 'OK' });
 });
 
+app.get('/api/cves', (req, res) => {
+  res.status(200).json({
+    message: 'CVE data endpoint',
+    data: []
+  });
+});
+
+// Error handling middleware
+app.use((err: any, req: any, res: any, next: any) => {
+  console.error(err.stack);
+  res.status(500).json({
+    error: 'error',
+    message: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
+  });
+});
+
+// 404 handler
+app.use((req: any, res: any) => {
+  res.status(404).json({ error: 'Route not found' });
+});
 
 // Start the server
 app.listen(PORT, () => {
