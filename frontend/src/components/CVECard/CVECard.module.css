@@ -1,0 +1,229 @@
+.card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+  will-change: transform, box-shadow;
+  contain: layout style paint;
+  animation: fadeIn 0.6s ease-out;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.cveId {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+  color: #fff;
+  word-break: break-word;
+}
+
+.severityBadge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  min-width: fit-content;
+}
+
+.severityBadge.critical {
+  background: linear-gradient(45deg, #ff4444, #cc0000);
+  color: white;
+  box-shadow: 0 2px 8px rgba(255, 68, 68, 0.3);
+}
+
+.severityBadge.high {
+  background: linear-gradient(45deg, #ff8800, #e67300);
+  color: white;
+  box-shadow: 0 2px 8px rgba(255, 136, 0, 0.3);
+}
+
+.severityBadge.medium {
+  background: linear-gradient(45deg, #ffcc00, #e6b800);
+  color: #333;
+  box-shadow: 0 2px 8px rgba(255, 204, 0, 0.3);
+}
+
+.severityBadge.low {
+  background: linear-gradient(45deg, #00cc44, #00a836);
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 204, 68, 0.3);
+}
+
+.severityBadge.unknown {
+  background: linear-gradient(45deg, #666, #555);
+  color: white;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.description {
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.6;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.metrics {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.cvssScore {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.label {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.score {
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.score.critical {
+  background: rgba(255, 68, 68, 0.2);
+  color: #ff6b6b;
+  border: 1px solid rgba(255, 68, 68, 0.3);
+}
+
+.score.high {
+  background: rgba(255, 136, 0, 0.2);
+  color: #ff8800;
+  border: 1px solid rgba(255, 136, 0, 0.3);
+}
+
+.score.medium {
+  background: rgba(255, 204, 0, 0.2);
+  color: #ffcc00;
+  border: 1px solid rgba(255, 204, 0, 0.3);
+}
+
+.score.low {
+  background: rgba(0, 204, 68, 0.2);
+  color: #00cc44;
+  border: 1px solid rgba(0, 204, 68, 0.3);
+}
+
+.score.unknown {
+  background: rgba(102, 102, 102, 0.2);
+  color: #999;
+  border: 1px solid rgba(102, 102, 102, 0.3);
+}
+
+.dates {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dateItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.date {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .card {
+    padding: 1rem;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .dates {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .dateItem {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  .card {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+  }
+
+  .card:hover {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    border-color: rgba(0, 0, 0, 0.2);
+  }
+
+  .cveId {
+    color: #333;
+  }
+
+  .description {
+    color: rgba(0, 0, 0, 0.8);
+  }
+
+  .label {
+    color: rgba(0, 0, 0, 0.6);
+  }
+
+  .date {
+    color: rgba(0, 0, 0, 0.8);
+  }
+
+  .dates {
+    border-top-color: rgba(0, 0, 0, 0.1);
+  }
+}
