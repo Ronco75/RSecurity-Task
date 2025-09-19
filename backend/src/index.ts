@@ -1,8 +1,8 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
-import { initDB, checkDBHealth, getDBStats, getAllCVEs, insertCVE } from './db.js';
-import { fetchCVEsFromAPI } from './cve-service.js';
+import { initDB, checkDBHealth, getDBStats, getAllCVEs } from './db.js';
+import { SyncService } from './sync-service.js';
 
 dotenv.config();
 
@@ -60,53 +60,32 @@ app.get('/api/cves', async (req, res) => {
   }
 });
 
-app.post('/api/cves/fetch', async (req, res) => {
+app.post('/api/cves/sync', async (req, res) => {
   try {
-    console.log('Starting CVE data fetch from NIST API...');
-    console.log('Environment check - NIST_API_URL:', process.env.NIST_API_URL);
-
-    // Fetch CVEs from NIST API
-    const cves = await fetchCVEsFromAPI(process.env.NIST_API_URL);
-
-    if (!cves || cves.length === 0) {
-      return res.status(200).json({
-        message: 'No CVE data received from NIST API',
-        fetched: 0,
-        stored: 0
-      });
-    }
-
-    // Store each CVE in the database
-    let storedCount = 0;
-    const errors = [];
-
-    for (const cve of cves) {
-      try {
-        await insertCVE(cve);
-        storedCount++;
-        console.log(`Stored CVE ${cve.cve_id}`);
-        console.log(`Stored ${storedCount} CVEs`);
-      } catch (error) {
-        console.error(`Failed to store CVE ${cve.cve_id}:`, error);
-        errors.push({
-          cve_id: cve.cve_id,
-          error: error instanceof Error ? error.message : 'Unknown error'
-        });
-      }
-    }
+    const syncResult = await SyncService.syncCVEData(process.env.NIST_API_URL);
 
     res.status(200).json({
-      message: 'CVE data fetch completed',
-      fetched: cves.length,
-      stored: storedCount,
-      errors: errors.length > 0 ? errors : undefined
+      success: syncResult.success,
+      message: syncResult.message,
+      fetched: syncResult.fetched,
+      stored: syncResult.stored,
+      errors: syncResult.errors.length > 0 ? syncResult.errors : undefined,
+      timestamp: syncResult.timestamp
     });
 
   } catch (error) {
-    console.error('Error during CVE fetch operation:', error);
+    console.error('Error during CVE sync operation:', error);
+
+    const syncStatus = SyncService.getSyncStatus();
 
     // Handle different types of errors with appropriate status codes
-    if (error instanceof Error && error.message.includes('timeout')) {
+    if (error instanceof Error && error.message.includes('already in progress')) {
+      res.status(409).json({
+        error: 'Conflict',
+        message: 'Sync operation is already in progress',
+        syncStatus
+      });
+    } else if (error instanceof Error && error.message.includes('timeout')) {
       res.status(408).json({
         error: 'Request timeout',
         message: 'NIST API request timed out'
@@ -124,9 +103,22 @@ app.post('/api/cves/fetch', async (req, res) => {
     } else {
       res.status(500).json({
         error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Failed to fetch CVE data'
+        message: error instanceof Error ? error.message : 'Failed to sync CVE data'
       });
     }
+  }
+});
+
+app.get('/api/cves/sync/status', async (req, res) => {
+  try {
+    const syncStatus = SyncService.getSyncStatus();
+    res.status(200).json(syncStatus);
+  } catch (error) {
+    console.error('Error getting sync status:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'Failed to get sync status'
+    });
   }
 });
 
@@ -151,10 +143,26 @@ const startServer = async () => {
     await initDB();
     console.log('Database initialized successfully');
 
+    // Check if database needs initial population
+    try {
+      const performedSync = await SyncService.performStartupSync();
+      if (performedSync) {
+        console.log('Database populated with initial CVE data');
+      }
+    } catch (syncError) {
+      console.warn('Initial sync failed, but server will continue:', syncError);
+      console.warn('You can manually trigger sync using POST /api/cves/sync');
+    }
+
     // Start the server
     app.listen(PORT, () => {
       console.log(`Server is running on http://localhost:${PORT}`);
       console.log(`Database path: ${process.env.DB_PATH || './data/cves.db'}`);
+      console.log('Available endpoints:');
+      console.log('  GET  /api/health - Health check');
+      console.log('  GET  /api/cves - Get all CVEs');
+      console.log('  POST /api/cves/sync - Sync CVE data from NIST API');
+      console.log('  GET  /api/cves/sync/status - Get sync status');
     });
   } catch (error) {
     console.error('Failed to start server:', error);
