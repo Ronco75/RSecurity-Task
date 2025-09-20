@@ -83,11 +83,34 @@
   gap: 1rem;
 }
 
+.descriptionContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
 .description {
   color: rgba(255, 255, 255, 0.85);
   line-height: 1.6;
   margin: 0;
   font-size: 0.9rem;
+}
+
+.expandButton {
+  background: none;
+  border: none;
+  color: #646cff;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0.25rem 0;
+  text-align: left;
+  transition: color 0.2s ease;
+  text-decoration: underline;
+}
+
+.expandButton:hover {
+  color: #535bf2;
 }
 
 .metrics {
@@ -166,6 +189,74 @@
   font-weight: 500;
 }
 
+.rawDataSection {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 1rem;
+}
+
+.rawDataToggle {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.8);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.rawDataToggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.toggleIcon {
+  transition: transform 0.2s ease;
+  font-size: 0.7rem;
+}
+
+.toggleIcon.expanded {
+  transform: rotate(180deg);
+}
+
+.rawDataContent {
+  margin-top: 0.75rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  max-height: 200px;
+  overflow-y: auto;
+  animation: slideDown 0.2s ease-out;
+}
+
+.rawDataPre {
+  margin: 0;
+  padding: 0.75rem;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.7rem;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.9);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    max-height: 200px;
+    transform: translateY(0);
+  }
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -230,5 +321,37 @@
 
   .dates {
     border-top-color: rgba(0, 0, 0, 0.1);
+  }
+
+  .expandButton {
+    color: #646cff;
+  }
+
+  .expandButton:hover {
+    color: #535bf2;
+  }
+
+  .rawDataSection {
+    border-top-color: rgba(0, 0, 0, 0.1);
+  }
+
+  .rawDataToggle {
+    background: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.1);
+    color: rgba(0, 0, 0, 0.7);
+  }
+
+  .rawDataToggle:hover {
+    background: rgba(0, 0, 0, 0.08);
+    border-color: rgba(0, 0, 0, 0.2);
+  }
+
+  .rawDataContent {
+    background: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.1);
+  }
+
+  .rawDataPre {
+    color: rgba(0, 0, 0, 0.8);
   }
 }

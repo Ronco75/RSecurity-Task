@@ -1,4 +1,4 @@
-import { CVEList } from './components/CVEList/CVEList'
+import { CVEDemo } from './components/CVEDemo/CVEDemo'
 import { ErrorBoundary } from './components/ErrorBoundary/ErrorBoundary'
 import './App.css'
 
@@ -6,7 +6,7 @@ function App() {
   return (
     <ErrorBoundary>
       <div className="app">
-        <CVEList />
+        <CVEDemo />
       </div>
     </ErrorBoundary>
   )

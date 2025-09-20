@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { CVE } from '../../types/cve';
 import styles from './CVECard.module.css';
 
@@ -39,6 +39,27 @@ const formatCVSSScore = (score: number): { display: string; severity: string } =
 export const CVECard: React.FC<CVECardProps> = React.memo(({ cve, style }) => {
   const severityClass = getSeverityColor(cve.severity);
   const cvssInfo = formatCVSSScore(cve.cvss_score);
+  
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [isRawDataExpanded, setIsRawDataExpanded] = useState(false);
+  
+  const descriptionLimit = 200;
+  const shouldTruncateDescription = cve.description.length > descriptionLimit;
+  
+  const displayDescription = isDescriptionExpanded 
+    ? cve.description 
+    : shouldTruncateDescription 
+      ? `${cve.description.substring(0, descriptionLimit)}...`
+      : cve.description;
+
+  const formatRawData = (rawData: string) => {
+    try {
+      const parsed = JSON.parse(rawData);
+      return JSON.stringify(parsed, null, 2);
+    } catch {
+      return rawData;
+    }
+  };
 
   return (
     <div className={styles.card} style={style}>
@@ -50,12 +71,19 @@ export const CVECard: React.FC<CVECardProps> = React.memo(({ cve, style }) => {
       </div>
 
       <div className={styles.content}>
-        <p className={styles.description}>
-          {cve.description.length > 200
-            ? `${cve.description.substring(0, 200)}...`
-            : cve.description
-          }
-        </p>
+        <div className={styles.descriptionContainer}>
+          <p className={styles.description}>
+            {displayDescription}
+          </p>
+          {shouldTruncateDescription && (
+            <button
+              className={styles.expandButton}
+              onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+            >
+              {isDescriptionExpanded ? 'Show Less' : 'Show More'}
+            </button>
+          )}
+        </div>
 
         <div className={styles.metrics}>
           <div className={styles.cvssScore}>
@@ -79,6 +107,25 @@ export const CVECard: React.FC<CVECardProps> = React.memo(({ cve, style }) => {
               {formatDate(cve.modified_date)}
             </span>
           </div>
+        </div>
+
+        <div className={styles.rawDataSection}>
+          <button
+            className={styles.rawDataToggle}
+            onClick={() => setIsRawDataExpanded(!isRawDataExpanded)}
+          >
+            <span>Raw Data</span>
+            <span className={`${styles.toggleIcon} ${isRawDataExpanded ? styles.expanded : ''}`}>
+              ▼
+            </span>
+          </button>
+          {isRawDataExpanded && (
+            <div className={styles.rawDataContent}>
+              <pre className={styles.rawDataPre}>
+                <code>{formatRawData(cve.raw_data)}</code>
+              </pre>
+            </div>
+          )}
         </div>
       </div>
     </div>
