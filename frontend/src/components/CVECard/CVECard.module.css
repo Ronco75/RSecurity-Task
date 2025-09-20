@@ -8,6 +8,11 @@
   will-change: transform, box-shadow;
   contain: layout style paint;
   animation: fadeIn 0.6s ease-out;
+  min-height: 280px;
+  height: fit-content;
+  display: flex;
+  flex-direction: column;
+  position: relative;
 }
 
 .card:hover {

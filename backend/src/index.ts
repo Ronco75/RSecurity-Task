@@ -10,7 +10,7 @@ const app = express();
 const { PORT } = process.env;
 
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: ['http://localhost:5173'],
   credentials: true
 }));
 
@@ -155,7 +155,7 @@ const startServer = async () => {
     }
 
     // Start the server
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
       console.log(`Server is running on http://localhost:${PORT}`);
       console.log(`Database path: ${process.env.DB_PATH || './data/cves.db'}`);
       console.log('Available endpoints:');
@@ -164,10 +164,29 @@ const startServer = async () => {
       console.log('  POST /api/cves/sync - Sync CVE data from NIST API');
       console.log('  GET  /api/cves/sync/status - Get sync status');
     });
+
+    // Handle graceful shutdown
+    process.on('SIGTERM', () => {
+      console.log('SIGTERM received, shutting down gracefully...');
+      server.close(() => {
+        process.exit(0);
+      });
+    });
+
+    process.on('SIGINT', () => {
+      console.log('SIGINT received, shutting down gracefully...');
+      server.close(() => {
+        process.exit(0);
+      });
+    });
+
   } catch (error) {
     console.error('Failed to start server:', error);
     process.exit(1);
   }
 };
 
-startServer();
+startServer().catch((error) => {
+  console.error('Unhandled error during startup:', error);
+  process.exit(1);
+});

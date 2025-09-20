@@ -10,14 +10,50 @@ export interface CVE {
 }
 
 export interface CVEApiResponse {
-  success: boolean;
+  message: string;
+  count: number;
   data: CVE[];
-  error?: string;
+}
+
+export interface HealthResponse {
+  message: string;
+  database: {
+    connected: boolean;
+    totalCVEs?: number;
+  };
+  timestamp: string;
+}
+
+export interface SyncResponse {
+  success: boolean;
+  message: string;
+  fetched?: number;
+  stored?: number;
+  errors?: string[];
+  timestamp?: string;
+}
+
+export interface SyncStatusResponse {
+  isActive: boolean;
+  status: string;
+  message?: string;
+  startTime?: string;
+  progress?: {
+    processed: number;
+    total: number;
+  };
 }
 
 export interface ApiError {
   message: string;
   status?: number;
+  error?: string;
+}
+
+export interface ApiErrorResponse {
+  error: string;
+  message: string;
+  syncStatus?: SyncStatusResponse;
 }
 
 export type LoadingState = 'idle' | 'loading' | 'success' | 'error';
@@ -30,4 +66,19 @@ export interface VirtualScrollItem {
   index: number;
   height: number;
   offset: number;
+}
+
+export interface NetworkState {
+  isOnline: boolean;
+  downlink?: number;
+  effectiveType?: string;
+}
+
+export interface RequestConfig {
+  enableRetry?: boolean;
+  retryAttempts?: number;
+  retryDelay?: number;
+  enableCache?: boolean;
+  cacheTimeout?: number;
+  deduplication?: boolean;
 }
