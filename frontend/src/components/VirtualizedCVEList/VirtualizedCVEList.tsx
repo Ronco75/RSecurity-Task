@@ -8,7 +8,7 @@ interface VirtualizedCVEListProps {
   gridColumns: number;
 }
 
-const CARD_HEIGHT = 360; // More accurate height for CVE cards (including gaps)
+const CARD_HEIGHT = 340; // Fixed height matching CVE cards (320px) + gap (20px)
 const ITEMS_TO_RENDER_BUFFER = 6; // Number of items to render outside viewport (reduced for better performance)
 
 export const VirtualizedCVEList: React.FC<VirtualizedCVEListProps> = ({ cves, gridColumns }) => {

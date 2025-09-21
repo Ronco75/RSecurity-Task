@@ -45,6 +45,7 @@
 .gridItem {
   flex: 1;
   min-width: 280px; /* Minimum width to prevent crushing */
+  max-height: 320px; /* Match the fixed card height */
   box-sizing: border-box;
 }
 

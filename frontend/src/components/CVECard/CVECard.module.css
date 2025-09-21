@@ -8,11 +8,12 @@
   will-change: transform, box-shadow;
   contain: layout style paint;
   animation: fadeIn 0.6s ease-out;
-  min-height: 280px;
-  height: fit-content;
+  height: 320px;
+  width: 100%;
   display: flex;
   flex-direction: column;
   position: relative;
+  overflow: hidden;
 }
 
 .card:hover {
@@ -81,6 +82,11 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
 }
 
 .descriptionContainer {
@@ -268,9 +274,28 @@
   }
 }
 
+/* Webkit scrollbar styles for content */
+.content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
 @media (max-width: 768px) {
   .card {
     padding: 1rem;
+    height: 280px;
   }
 
   .header {
@@ -353,5 +378,17 @@
 
   .rawDataPre {
     color: rgba(0, 0, 0, 0.8);
+  }
+
+  .content {
+    scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+  }
+
+  .content::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+  }
+
+  .content::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
   }
 }
