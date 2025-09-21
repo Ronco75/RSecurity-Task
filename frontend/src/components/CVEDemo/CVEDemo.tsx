@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCVEs } from '../../hooks/useCVEs';
-import { CVECard } from '../CVECard/CVECard';
+import { VirtualizedCVEList } from '../VirtualizedCVEList/VirtualizedCVEList';
 import { CVEItem } from '../CVEItem/CVEItem';
 import { LoadingSpinner } from '../LoadingSpinner/LoadingSpinner';
 import { ErrorBoundary } from '../ErrorBoundary/ErrorBoundary';
@@ -12,6 +12,28 @@ export const CVEDemo: React.FC = () => {
   const { cves, loading, error, refetch, syncCVEs } = useCVEs();
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [selectedCVE, setSelectedCVE] = useState<string | null>(null);
+  const [gridColumns, setGridColumns] = useState(() => {
+    const width = window.innerWidth;
+    if (width >= 1400) return 4;
+    if (width >= 1024) return 3;
+    if (width >= 768) return 2;
+    return 1;
+  });
+
+  useEffect(() => {
+    const updateGridColumns = () => {
+      const width = window.innerWidth;
+      if (width >= 1400) setGridColumns(4);
+      else if (width >= 1024) setGridColumns(3);
+      else if (width >= 768) setGridColumns(2);
+      else setGridColumns(1);
+    };
+
+    window.addEventListener('resize', updateGridColumns);
+    return () => window.removeEventListener('resize', updateGridColumns);
+  }, []);
+
+  const displayCVEs = cves;
 
   if (loading === 'loading' && cves.length === 0) {
     return (
@@ -40,7 +62,6 @@ export const CVEDemo: React.FC = () => {
     );
   }
 
-  const displayCVEs = cves;
 
   return (
     <ErrorBoundary>
@@ -105,12 +126,7 @@ export const CVEDemo: React.FC = () => {
                   <p>Compact card view with expandable descriptions and raw data sections.</p>
                 </div>
                 <div className={styles.grid}>
-                  {displayCVEs.map((cve) => (
-                    <CVECard
-                      key={cve.cve_id}
-                      cve={cve}
-                    />
-                  ))}
+                  <VirtualizedCVEList cves={displayCVEs} gridColumns={gridColumns} />
                 </div>
               </div>
             ) : (

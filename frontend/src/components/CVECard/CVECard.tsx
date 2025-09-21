@@ -5,6 +5,10 @@ import styles from './CVECard.module.css';
 interface CVECardProps {
   cve: CVE;
   style?: React.CSSProperties;
+  isDescriptionExpanded?: boolean;
+  isRawDataExpanded?: boolean;
+  onToggleDescription?: () => void;
+  onToggleRawData?: () => void;
 }
 
 const getSeverityColor = (severity: string): string => {
@@ -36,12 +40,28 @@ const formatCVSSScore = (score: number): { display: string; severity: string } =
   return { display: 'N/A', severity: 'unknown' };
 };
 
-export const CVECard: React.FC<CVECardProps> = React.memo(({ cve, style }) => {
+export const CVECard: React.FC<CVECardProps> = React.memo(({
+  cve,
+  style,
+  isDescriptionExpanded: externalDescriptionExpanded,
+  isRawDataExpanded: externalRawDataExpanded,
+  onToggleDescription,
+  onToggleRawData
+}) => {
   const severityClass = getSeverityColor(cve.severity);
   const cvssInfo = formatCVSSScore(cve.cvss_score);
-  
-  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
-  const [isRawDataExpanded, setIsRawDataExpanded] = useState(false);
+
+  // Use internal state when external handlers are not provided
+  const [internalDescriptionExpanded, setInternalDescriptionExpanded] = useState(false);
+  const [internalRawDataExpanded, setInternalRawDataExpanded] = useState(false);
+
+  // Determine which state to use
+  const isDescriptionExpanded = onToggleDescription ? externalDescriptionExpanded : internalDescriptionExpanded;
+  const isRawDataExpanded = onToggleRawData ? externalRawDataExpanded : internalRawDataExpanded;
+
+  // Create handlers that work with internal or external state
+  const handleToggleDescription = onToggleDescription || (() => setInternalDescriptionExpanded(!internalDescriptionExpanded));
+  const handleToggleRawData = onToggleRawData || (() => setInternalRawDataExpanded(!internalRawDataExpanded));
   
   const descriptionLimit = 200;
   const shouldTruncateDescription = cve.description.length > descriptionLimit;
@@ -78,7 +98,7 @@ export const CVECard: React.FC<CVECardProps> = React.memo(({ cve, style }) => {
           {shouldTruncateDescription && (
             <button
               className={styles.expandButton}
-              onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+              onClick={handleToggleDescription}
             >
               {isDescriptionExpanded ? 'Show Less' : 'Show More'}
             </button>
@@ -112,7 +132,7 @@ export const CVECard: React.FC<CVECardProps> = React.memo(({ cve, style }) => {
         <div className={styles.rawDataSection}>
           <button
             className={styles.rawDataToggle}
-            onClick={() => setIsRawDataExpanded(!isRawDataExpanded)}
+            onClick={handleToggleRawData}
           >
             <span>Raw Data</span>
             <span className={`${styles.toggleIcon} ${isRawDataExpanded ? styles.expanded : ''}`}>

@@ -1,6 +1,6 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCVEs } from '../../hooks/useCVEs';
-import { CVECard } from '../CVECard/CVECard';
+import { VirtualizedCVEList } from '../VirtualizedCVEList/VirtualizedCVEList';
 import { LoadingSpinner } from '../LoadingSpinner/LoadingSpinner';
 import { ErrorBoundary } from '../ErrorBoundary/ErrorBoundary';
 import styles from './CVEList.module.css';
@@ -93,14 +93,7 @@ export const CVEList: React.FC = () => {
           </div>
         ) : (
           <div className={styles.listContainer}>
-            <div className={styles.grid} style={{ gridTemplateColumns: `repeat(${gridColumns}, 1fr)` }}>
-              {cves.map((cve) => (
-                <CVECard
-                  key={cve.cve_id}
-                  cve={cve}
-                />
-              ))}
-            </div>
+            <VirtualizedCVEList cves={cves} gridColumns={gridColumns} />
           </div>
         )}
 

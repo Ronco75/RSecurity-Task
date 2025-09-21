@@ -1,0 +1,84 @@
+.container {
+  width: 100%;
+  height: 80vh; /* Fixed height to create proper viewport */
+  max-height: 800px;
+  min-height: 400px;
+  overflow-y: auto;
+  position: relative;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.container::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.scrollContent {
+  position: relative;
+  width: 100%;
+}
+
+.gridRow {
+  display: flex;
+  gap: 1.5rem;
+  padding: 0 0.75rem;
+  align-items: flex-start;
+  box-sizing: border-box;
+  pointer-events: auto; /* Ensure interactions work */
+  flex-wrap: nowrap; /* Keep items in single row */
+  justify-content: flex-start;
+}
+
+.gridItem {
+  flex: 1;
+  min-width: 280px; /* Minimum width to prevent crushing */
+  box-sizing: border-box;
+}
+
+.emptyContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 1rem;
+  text-align: center;
+}
+
+@media (prefers-color-scheme: light) {
+  .container {
+    scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+  }
+
+  .container::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+  }
+
+  .container::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
+  }
+
+  .emptyContainer {
+    color: rgba(0, 0, 0, 0.6);
+  }
+}
+
+/* Responsive grid item sizing */
+@media (max-width: 767px) {
+  .gridItem {
+    min-width: 100%; /* Single column on mobile - full width */
+  }
+}
