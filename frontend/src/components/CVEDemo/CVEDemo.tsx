@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useCVEs } from '../../hooks/useCVEs';
 import { VirtualizedCVEList } from '../VirtualizedCVEList/VirtualizedCVEList';
-import { CVEItem } from '../CVEItem/CVEItem';
+import { VirtualizedCVEItemList } from '../VirtualizedCVEItemList/VirtualizedCVEItemList';
 import { LoadingSpinner } from '../LoadingSpinner/LoadingSpinner';
 import { ErrorBoundary } from '../ErrorBoundary/ErrorBoundary';
 import styles from './CVEDemo.module.css';
@@ -11,7 +11,6 @@ type ViewMode = 'grid' | 'list';
 export const CVEDemo: React.FC = () => {
   const { cves, loading, error, refetch, syncCVEs } = useCVEs();
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [selectedCVE, setSelectedCVE] = useState<string | null>(null);
   const [gridColumns, setGridColumns] = useState(() => {
     const width = window.innerWidth;
     if (width >= 1400) return 4;
@@ -136,12 +135,7 @@ export const CVEDemo: React.FC = () => {
                   <p>Detailed item view with comprehensive information display and structured sections.</p>
                 </div>
                 <div className={styles.list}>
-                  {displayCVEs.map((cve) => (
-                    <CVEItem
-                      key={cve.cve_id}
-                      cve={cve}
-                    />
-                  ))}
+                  <VirtualizedCVEItemList cves={displayCVEs} />
                 </div>
               </div>
             )}

@@ -177,10 +177,8 @@
 }
 
 .list {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
   width: 100%;
+  height: 600px; /* Fixed height for virtual scrolling container */
 }
 
 .errorContainer {
