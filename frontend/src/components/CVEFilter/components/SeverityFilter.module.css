@@ -1,0 +1,190 @@
+.container {
+  width: 100%;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.label {
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.9rem;
+}
+
+.selectAllButton {
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.7);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.selectAllButton:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.selectAllButton:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(100, 108, 255, 0.3);
+}
+
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.option {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.checkbox {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.pill {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+}
+
+.indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--severity-color, rgba(255, 255, 255, 0.3));
+  transition: all 0.2s ease;
+  opacity: 0.6;
+}
+
+.text {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.8);
+  transition: color 0.2s ease;
+}
+
+.option:hover .pill {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.option:hover .text {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.option:hover .indicator {
+  opacity: 0.8;
+}
+
+.option.selected .pill {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: var(--severity-color);
+  box-shadow: 0 0 0 1px var(--severity-color);
+}
+
+.option.selected .indicator {
+  opacity: 1;
+  box-shadow: 0 0 8px var(--severity-color);
+}
+
+.option.selected .text {
+  color: rgba(255, 255, 255, 1);
+}
+
+.option:focus-within .pill {
+  box-shadow: 0 0 0 2px rgba(100, 108, 255, 0.3);
+}
+
+.summary {
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .options {
+    gap: 0.375rem;
+  }
+
+  .pill {
+    padding: 0.375rem 0.625rem;
+  }
+
+  .text {
+    font-size: 0.75rem;
+  }
+
+  .indicator {
+    width: 6px;
+    height: 6px;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  .label {
+    color: #333;
+  }
+
+  .selectAllButton {
+    border-color: rgba(0, 0, 0, 0.2);
+    color: rgba(0, 0, 0, 0.7);
+  }
+
+  .selectAllButton:hover {
+    border-color: rgba(0, 0, 0, 0.3);
+    color: rgba(0, 0, 0, 0.9);
+    background: rgba(0, 0, 0, 0.05);
+  }
+
+  .pill {
+    background: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.1);
+  }
+
+  .text {
+    color: rgba(0, 0, 0, 0.8);
+  }
+
+  .option:hover .pill {
+    background: rgba(0, 0, 0, 0.08);
+    border-color: rgba(0, 0, 0, 0.2);
+  }
+
+  .option:hover .text {
+    color: rgba(0, 0, 0, 0.95);
+  }
+
+  .option.selected .pill {
+    background: rgba(0, 0, 0, 0.08);
+  }
+
+  .option.selected .text {
+    color: #333;
+  }
+
+  .summary {
+    color: rgba(0, 0, 0, 0.6);
+  }
+}

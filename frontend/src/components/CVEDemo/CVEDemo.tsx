@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useCVEs } from '../../hooks/useCVEs';
+import { useFilters } from '../../hooks/useFilters';
 import { VirtualizedCVEList } from '../VirtualizedCVEList/VirtualizedCVEList';
 import { VirtualizedCVEItemList } from '../VirtualizedCVEItemList/VirtualizedCVEItemList';
 import { LoadingSpinner } from '../LoadingSpinner/LoadingSpinner';
 import { ErrorBoundary } from '../ErrorBoundary/ErrorBoundary';
+import { CVEFilter } from '../CVEFilter/CVEFilter';
 import styles from './CVEDemo.module.css';
 
 type ViewMode = 'grid' | 'list';
 
 export const CVEDemo: React.FC = () => {
   const { cves, loading, error, refetch, syncCVEs } = useCVEs();
+  const { filters, filteredCVEs, totalCount, filteredCount, updateFilters } = useFilters(cves);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [gridColumns, setGridColumns] = useState(() => {
     const width = window.innerWidth;
@@ -32,7 +35,7 @@ export const CVEDemo: React.FC = () => {
     return () => window.removeEventListener('resize', updateGridColumns);
   }, []);
 
-  const displayCVEs = cves;
+  const displayCVEs = filteredCVEs;
 
   if (loading === 'loading' && cves.length === 0) {
     return (
@@ -67,9 +70,9 @@ export const CVEDemo: React.FC = () => {
       <div className={styles.container}>
         <div className={styles.header}>
           <div className={styles.titleSection}>
-            <h1 className={styles.title}>CVE Component Demo</h1>
+            <h1 className={styles.title}>RSecurity Task - Ron Cohen</h1>
             <p className={styles.subtitle}>
-              Showing {displayCVEs.length} of {cves.length} vulnerabilities
+              Showing {filteredCount} of {totalCount} vulnerabilities
             </p>
           </div>
           
@@ -117,29 +120,30 @@ export const CVEDemo: React.FC = () => {
             </button>
           </div>
         ) : (
-          <div className={styles.content}>
-            {viewMode === 'grid' ? (
-              <div className={styles.gridView}>
-                <div className={styles.viewDescription}>
-                  <h3>CVECard Component - Grid Layout</h3>
-                  <p>Compact card view with expandable descriptions and raw data sections.</p>
+          <>
+            <CVEFilter
+              filters={filters}
+              onFiltersChange={updateFilters}
+              totalCount={totalCount}
+              filteredCount={filteredCount}
+            />
+
+            <div className={styles.content}>
+              {viewMode === 'grid' ? (
+                <div className={styles.gridView}>
+                  <div className={styles.grid}>
+                    <VirtualizedCVEList cves={displayCVEs} gridColumns={gridColumns} />
+                  </div>
                 </div>
-                <div className={styles.grid}>
-                  <VirtualizedCVEList cves={displayCVEs} gridColumns={gridColumns} />
+              ) : (
+                <div className={styles.listView}>
+                  <div className={styles.list}>
+                    <VirtualizedCVEItemList cves={displayCVEs} />
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className={styles.listView}>
-                <div className={styles.viewDescription}>
-                  <h3>CVEItem Component - List Layout</h3>
-                  <p>Detailed item view with comprehensive information display and structured sections.</p>
-                </div>
-                <div className={styles.list}>
-                  <VirtualizedCVEItemList cves={displayCVEs} />
-                </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          </>
         )}
 
         {error && cves.length > 0 && (
