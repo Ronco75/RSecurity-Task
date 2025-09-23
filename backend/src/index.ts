@@ -1,16 +1,21 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { initDB, checkDBHealth, getDBStats, getAllCVEs } from './db.js';
 import { SyncService } from './sync-service.js';
 
 dotenv.config();
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
 const { PORT } = process.env;
 
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:5174'],
+  origin: process.env.NODE_ENV === 'production' ? true : ['http://localhost:5173', 'http://localhost:5174'],
   credentials: true
 }));
 
@@ -122,6 +127,9 @@ app.get('/api/cves/sync/status', async (req, res) => {
   }
 });
 
+// Serve static files from the frontend build
+app.use(express.static(path.join(__dirname, '../public')));
+
 // Error handling middleware
 app.use((err: any, req: any, res: any, next: any) => {
   console.error(err.stack);
@@ -129,11 +137,6 @@ app.use((err: any, req: any, res: any, next: any) => {
     error: 'error',
     message: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
   });
-});
-
-// 404 handler
-app.use((req: any, res: any) => {
-  res.status(404).json({ error: 'Route not found' });
 });
 
 // Initialize database and start server
@@ -153,6 +156,9 @@ const startServer = async () => {
       console.warn('Initial sync failed, but server will continue:', syncError);
       console.warn('You can manually trigger sync using POST /api/cves/sync');
     }
+
+    // Setup SPA routing before starting server
+    setupSPARouting();
 
     // Start the server
     const server = app.listen(PORT, () => {
@@ -184,6 +190,23 @@ const startServer = async () => {
     console.error('Failed to start server:', error);
     process.exit(1);
   }
+};
+
+// Handle SPA routing - must be after startServer call
+const setupSPARouting = () => {
+  // Serve index.html for all non-API routes (SPA fallback)
+  app.use((req, res, next) => {
+    // Skip if it's an API route
+    if (req.path.startsWith('/api/')) {
+      return next();
+    }
+    // Skip if it's a static file request (has extension)
+    if (req.path.includes('.') && !req.path.endsWith('/')) {
+      return next();
+    }
+    // Serve index.html for SPA routes
+    res.sendFile(path.join(__dirname, '../public', 'index.html'));
+  });
 };
 
 startServer().catch((error) => {
