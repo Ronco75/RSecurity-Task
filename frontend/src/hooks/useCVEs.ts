@@ -19,29 +19,38 @@ export const useCVEs = (): UseCVEsReturn => {
   const [error, setError] = useState<ApiError | null>(null);
   const [networkState, setNetworkState] = useState<NetworkState>(cveApi.getNetworkState());
   const mounted = useRef(true);
+  const pollingIntervalRef = useRef<number | null>(null);
+  const lastCVECount = useRef<number>(0);
 
-  const fetchCVEs = useCallback(async () => {
+  const fetchCVEs = useCallback(async (silent: boolean = false) => {
     if (!mounted.current) return;
 
     try {
-      setLoading('loading');
-      setError(null);
+      if (!silent) {
+        setLoading('loading');
+        setError(null);
+      }
 
       const data = await cveApi.getAllCVEs({
         enableRetry: true,
         retryAttempts: 3,
-        enableCache: true,
+        enableCache: false, // Disable cache for real-time updates
       });
 
       if (mounted.current) {
         setCVEs(data);
-        setLoading('success');
+        lastCVECount.current = data.length;
+        if (!silent) {
+          setLoading('success');
+        }
       }
     } catch (err) {
       if (mounted.current) {
         const apiError = err as ApiError;
         setError(apiError);
-        setLoading('error');
+        if (!silent) {
+          setLoading('error');
+        }
         console.error('Failed to fetch CVEs:', apiError);
       }
     }
@@ -58,6 +67,9 @@ export const useCVEs = (): UseCVEsReturn => {
         enableCache: false,
       });
 
+      // Start polling to monitor background sync progress
+      startPolling();
+
       await fetchCVEs();
       return syncResult;
     } catch (err) {
@@ -67,10 +79,46 @@ export const useCVEs = (): UseCVEsReturn => {
       console.error('Failed to sync CVEs:', apiError);
       throw err;
     }
-  }, [fetchCVEs]);
+  }, [fetchCVEs, startPolling]);
 
   const clearCache = useCallback(() => {
     cveApi.clearCache();
+  }, []);
+
+  // Start polling for CVE updates during background sync
+  const startPolling = useCallback(() => {
+    if (pollingIntervalRef.current) return; // Already polling
+
+    pollingIntervalRef.current = window.setInterval(async () => {
+      if (!mounted.current) return;
+
+      try {
+        // Check sync status first
+        const syncStatus = await cveApi.getSyncStatus({
+          enableRetry: false,
+          enableCache: false
+        });
+
+        if (syncStatus.isRunning) {
+          // Sync is running, fetch updated CVEs silently
+          await fetchCVEs(true);
+        } else {
+          // Sync completed, stop polling and do final fetch
+          stopPolling();
+          await fetchCVEs(true);
+        }
+      } catch (error) {
+        console.error('Error during polling:', error);
+      }
+    }, 2000); // Poll every 2 seconds
+  }, [fetchCVEs]);
+
+  // Stop polling
+  const stopPolling = useCallback(() => {
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
   }, []);
 
   useEffect(() => {
@@ -85,17 +133,37 @@ export const useCVEs = (): UseCVEsReturn => {
     return () => {
       unsubscribe();
       mounted.current = false;
+      stopPolling();
     };
-  }, [error, fetchCVEs]);
+  }, [error, fetchCVEs, stopPolling]);
 
   useEffect(() => {
     mounted.current = true;
     fetchCVEs();
 
+    // Check if sync is running and start polling if needed
+    const checkSyncStatus = async () => {
+      try {
+        const syncStatus = await cveApi.getSyncStatus({
+          enableRetry: false,
+          enableCache: false
+        });
+
+        if (syncStatus.isRunning) {
+          startPolling();
+        }
+      } catch (error) {
+        console.error('Error checking initial sync status:', error);
+      }
+    };
+
+    checkSyncStatus();
+
     return () => {
       mounted.current = false;
+      stopPolling();
     };
-  }, [fetchCVEs]);
+  }, [fetchCVEs, startPolling, stopPolling]);
 
   return {
     cves,

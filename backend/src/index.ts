@@ -67,16 +67,31 @@ app.get('/api/cves', async (req, res) => {
 
 app.post('/api/cves/sync', async (req, res) => {
   try {
-    const syncResult = await SyncService.syncCVEData(process.env.NIST_API_URL);
+    const { background = false } = req.body;
 
-    res.status(200).json({
-      success: syncResult.success,
-      message: syncResult.message,
-      fetched: syncResult.fetched,
-      stored: syncResult.stored,
-      errors: syncResult.errors.length > 0 ? syncResult.errors : undefined,
-      timestamp: syncResult.timestamp
-    });
+    if (background) {
+      // Start background sync (non-blocking)
+      await SyncService.startBackgroundSync(process.env.NIST_API_URL);
+
+      res.status(202).json({
+        success: true,
+        message: 'Background sync started',
+        background: true,
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      // Traditional blocking sync
+      const syncResult = await SyncService.syncCVEData(process.env.NIST_API_URL);
+
+      res.status(200).json({
+        success: syncResult.success,
+        message: syncResult.message,
+        fetched: syncResult.fetched,
+        stored: syncResult.stored,
+        errors: syncResult.errors.length > 0 ? syncResult.errors : undefined,
+        timestamp: syncResult.timestamp
+      });
+    }
 
   } catch (error) {
     console.error('Error during CVE sync operation:', error);
@@ -146,14 +161,15 @@ const startServer = async () => {
     await initDB();
     console.log('Database initialized successfully');
 
-    // Check if database needs initial population
+    // Check if database needs initial population and start background sync
     try {
-      const performedSync = await SyncService.performStartupSync();
-      if (performedSync) {
-        console.log('Database populated with initial CVE data');
+      const performedBackgroundSync = await SyncService.performBackgroundStartupSync();
+      if (performedBackgroundSync) {
+        console.log('Background sync started - CVE data will be populated progressively');
+        console.log('Server is immediately available while sync runs in background');
       }
     } catch (syncError) {
-      console.warn('Initial sync failed, but server will continue:', syncError);
+      console.warn('Background sync failed to start, but server will continue:', syncError);
       console.warn('You can manually trigger sync using POST /api/cves/sync');
     }
 
@@ -164,11 +180,16 @@ const startServer = async () => {
     const server = app.listen(PORT, () => {
       console.log(`Server is running on http://localhost:${PORT}`);
       console.log(`Database path: ${process.env.DB_PATH || './data/cves.db'}`);
+      console.log(`NIST API URL: ${process.env.NIST_API_URL}`);
       console.log('Available endpoints:');
       console.log('  GET  /api/health - Health check');
       console.log('  GET  /api/cves - Get all CVEs');
-      console.log('  POST /api/cves/sync - Sync CVE data from NIST API');
-      console.log('  GET  /api/cves/sync/status - Get sync status');
+      console.log('  POST /api/cves/sync - Sync CVE data from NIST API (blocking)');
+      console.log('  POST /api/cves/sync {"background": true} - Start background sync (non-blocking)');
+      console.log('  GET  /api/cves/sync/status - Get sync status and progress');
+      console.log('');
+      console.log('✅ Server is immediately available for requests');
+      console.log('🔄 Background sync runs independently if database was empty');
     });
 
     // Handle graceful shutdown
