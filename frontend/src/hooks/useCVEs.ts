@@ -147,7 +147,7 @@ export const useCVEs = (): UseCVEsReturn => {
       } catch (error) {
         console.error('Auto-refresh failed:', error);
       }
-    }, 15000); // Refresh every 15 seconds for demo purposes
+    }, 10000); // Refresh every 10 seconds for demo purposes
   }, [fetchCVEs]);
 
   // Stop auto-refresh

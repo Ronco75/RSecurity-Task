@@ -1,5 +1,5 @@
 import { fetchCVEsFromAPI, fetchAllCVEsInChunks, CVEServiceError } from './cve-service.js';
-import { insertCVE, getDBStats, checkDBHealth } from './db.js';
+import { insertCVE, insertCVEsBatch, getDBStats, checkDBHealth } from './db.js';
 import type { CVE } from './db.js';
 
 export interface SyncResult {
@@ -88,28 +88,12 @@ export class SyncService {
         return result;
       }
 
-      console.log(`Fetched ${cves.length} CVEs from NIST API, starting database storage...`);
+      console.log(`Fetched ${cves.length} CVEs from NIST API, starting batch database storage...`);
 
-      let storedCount = 0;
-      const errors: Array<{ cve_id: string; error: string }> = [];
-
-      for (const cve of cves) {
-        try {
-          await insertCVE(cve);
-          storedCount++;
-
-          if (storedCount % 10 === 0) {
-            console.log(`Progress: Stored ${storedCount}/${cves.length} CVEs`);
-          }
-        } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-          console.error(`Failed to store CVE ${cve.cve_id}:`, errorMessage);
-          errors.push({
-            cve_id: cve.cve_id,
-            error: errorMessage
-          });
-        }
-      }
+      // Use batch insert for much better performance
+      const batchResult = await insertCVEsBatch(cves, 500);
+      const storedCount = batchResult.inserted;
+      const errors = batchResult.errors;
 
       const result: SyncResult = {
         success: true,
@@ -331,24 +315,9 @@ export class SyncService {
   }
 
   private static async storeCVEsInBackground(cves: CVE[]): Promise<{ success: number; errors: Array<{ cve_id: string; error: string }> }> {
-    let successCount = 0;
-    const errors: Array<{ cve_id: string; error: string }> = [];
-
-    for (const cve of cves) {
-      try {
-        await insertCVE(cve);
-        successCount++;
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        console.error(`Failed to store CVE ${cve.cve_id}:`, errorMessage);
-        errors.push({
-          cve_id: cve.cve_id,
-          error: errorMessage
-        });
-      }
-    }
-
-    return { success: successCount, errors };
+    // Use batch insert for much better performance
+    const batchResult = await insertCVEsBatch(cves, 500);
+    return { success: batchResult.inserted, errors: batchResult.errors };
   }
 
   private static calculateETA(startTime: number, current: number, total: number): number | undefined {

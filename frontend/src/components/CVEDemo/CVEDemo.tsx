@@ -113,11 +113,10 @@ export const CVEDemo: React.FC = () => {
 
         {cves.length === 0 && loading !== 'loading' ? (
           <div className={styles.emptyState}>
-            <h3>No CVE data available</h3>
-            <p>Click "Sync CVEs" to fetch the latest vulnerability data.</p>
-            <button onClick={syncCVEs} className={styles.syncButton}>
-              Sync CVEs
-            </button>
+            <LoadingSpinner size="medium" message="Syncing CVE data..." />
+            <h3>CVE Data Synchronization in Progress</h3>
+            <p>The CVE data is currently being synchronized. Please click the <strong>"Refresh"</strong> button above to load the data.</p>
+            <p>If the refresh doesn't work immediately, please wait a minute and click refresh again.</p>
           </div>
         ) : (
           <>

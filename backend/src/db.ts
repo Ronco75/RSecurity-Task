@@ -49,6 +49,13 @@ export const initDB = async (): Promise<void> => {
         return;
       }
       console.log('Connected to SQLite database at:', dbPath);
+
+      // Optimize database for bulk operations
+      db.run('PRAGMA journal_mode = WAL'); // Write-Ahead Logging for better concurrency
+      db.run('PRAGMA synchronous = NORMAL'); // Faster writes, still safe
+      db.run('PRAGMA cache_size = 10000'); // Increase cache size (10MB)
+      db.run('PRAGMA temp_store = memory'); // Use memory for temp storage
+      db.run('PRAGMA mmap_size = 268435456'); // Enable memory mapping (256MB)
     });
 
     // Create CVEs table
@@ -87,7 +94,7 @@ export const initDB = async (): Promise<void> => {
   });
 };
 
-// Insert a new CVE record
+// Insert a new CVE record (single insert - kept for compatibility)
 export const insertCVE = async (cve: CVE): Promise<number> => {
   return new Promise((resolve, reject) => {
     if (!db) {
@@ -120,6 +127,102 @@ export const insertCVE = async (cve: CVE): Promise<number> => {
       console.log(`CVE inserted with ID: ${this.lastID}, CVE-ID: ${cve.cve_id}`);
       resolve(this.lastID);
     });
+  });
+};
+
+// Batch insert CVE records for much better performance
+export const insertCVEsBatch = async (cves: CVE[], batchSize: number = 500): Promise<{ inserted: number; errors: Array<{ cve_id: string; error: string }> }> => {
+  return new Promise((resolve, reject) => {
+    if (!db) {
+      reject(new Error('Database not initialized. Call initDB() first.'));
+      return;
+    }
+
+    if (cves.length === 0) {
+      resolve({ inserted: 0, errors: [] });
+      return;
+    }
+
+    let totalInserted = 0;
+    const errors: Array<{ cve_id: string; error: string }> = [];
+    let processed = 0;
+
+    // Process in batches to avoid memory issues and improve performance
+    const processBatch = (startIndex: number) => {
+      const endIndex = Math.min(startIndex + batchSize, cves.length);
+      const batch = cves.slice(startIndex, endIndex);
+
+      db.serialize(() => {
+        db.run('BEGIN TRANSACTION');
+
+        const insertSQL = `
+          INSERT OR REPLACE INTO cves
+          (cve_id, description, severity, published_date, modified_date, cvss_score, raw_data)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `;
+
+        const stmt = db.prepare(insertSQL);
+        let batchInserted = 0;
+
+        batch.forEach((cve) => {
+          const params = [
+            cve.cve_id,
+            cve.description,
+            cve.severity,
+            cve.published_date,
+            cve.modified_date,
+            cve.cvss_score,
+            cve.raw_data
+          ];
+
+          stmt.run(params, function(err) {
+            if (err) {
+              errors.push({
+                cve_id: cve.cve_id,
+                error: err.message
+              });
+            } else {
+              batchInserted++;
+            }
+          });
+        });
+
+        stmt.finalize((err) => {
+          if (err) {
+            console.error('Error finalizing statement:', err.message);
+            errors.push({
+              cve_id: 'BATCH_FINALIZE_ERROR',
+              error: err.message
+            });
+          }
+        });
+
+        db.run('COMMIT', (err) => {
+          if (err) {
+            console.error('Error committing batch transaction:', err.message);
+            errors.push({
+              cve_id: 'BATCH_COMMIT_ERROR',
+              error: err.message
+            });
+          } else {
+            totalInserted += batchInserted;
+            console.log(`Batch ${Math.floor(startIndex / batchSize) + 1}: Inserted ${batchInserted}/${batch.length} CVEs (Total: ${totalInserted}/${cves.length})`);
+          }
+
+          processed += batch.length;
+
+          // Process next batch or finish
+          if (endIndex < cves.length) {
+            processBatch(endIndex);
+          } else {
+            resolve({ inserted: totalInserted, errors });
+          }
+        });
+      });
+    };
+
+    // Start processing
+    processBatch(0);
   });
 };
 
