@@ -130,6 +130,41 @@ export const insertCVE = async (cve: CVE): Promise<number> => {
   });
 };
 
+// Progressive batch insert - start small for immediate visibility, then increase batch size
+export const insertCVEsProgressive = async (cves: CVE[]): Promise<{ inserted: number; errors: Array<{ cve_id: string; error: string }> }> => {
+  if (cves.length === 0) {
+    return { inserted: 0, errors: [] };
+  }
+
+  const errors: Array<{ cve_id: string; error: string }> = [];
+  let totalInserted = 0;
+  let startIndex = 0;
+
+  // Progressive batch sizes: start very small for immediate results, then increase for efficiency
+  const batchSizes = [10, 20, 50, 100, 200, 500]; // Start with 10 CVEs for immediate visibility
+  let batchSizeIndex = 0;
+
+  while (startIndex < cves.length) {
+    const currentBatchSize = batchSizes[Math.min(batchSizeIndex, batchSizes.length - 1)] || 500;
+    const endIndex = Math.min(startIndex + currentBatchSize, cves.length);
+    const batch = cves.slice(startIndex, endIndex);
+
+    const result = await insertCVEsBatch(batch, currentBatchSize);
+    totalInserted += result.inserted;
+    errors.push(...result.errors);
+
+    console.log(`Progressive batch ${batchSizeIndex + 1}: Inserted ${result.inserted}/${batch.length} CVEs (Total: ${totalInserted}/${cves.length})`);
+
+    startIndex = endIndex;
+    batchSizeIndex++;
+
+    // Small delay to ensure database writes are committed and visible to reads
+    await new Promise(resolve => setTimeout(resolve, 10));
+  }
+
+  return { inserted: totalInserted, errors };
+};
+
 // Batch insert CVE records for much better performance
 export const insertCVEsBatch = async (cves: CVE[], batchSize: number = 500): Promise<{ inserted: number; errors: Array<{ cve_id: string; error: string }> }> => {
   return new Promise((resolve, reject) => {

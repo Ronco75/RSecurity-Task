@@ -1,5 +1,5 @@
 import { fetchCVEsFromAPI, fetchAllCVEsInChunks, CVEServiceError } from './cve-service.js';
-import { insertCVE, insertCVEsBatch, getDBStats, checkDBHealth } from './db.js';
+import { insertCVE, insertCVEsBatch, insertCVEsProgressive, getDBStats, checkDBHealth } from './db.js';
 import type { CVE } from './db.js';
 
 export interface SyncResult {
@@ -88,12 +88,12 @@ export class SyncService {
         return result;
       }
 
-      console.log(`Fetched ${cves.length} CVEs from NIST API, starting batch database storage...`);
+      console.log(`Fetched ${cves.length} CVEs from NIST API, starting progressive database storage...`);
 
-      // Use batch insert for much better performance
-      const batchResult = await insertCVEsBatch(cves, 500);
-      const storedCount = batchResult.inserted;
-      const errors = batchResult.errors;
+      // Use progressive insert for immediate visibility (starts with 10 CVEs, then grows)
+      const progressiveResult = await insertCVEsProgressive(cves);
+      const storedCount = progressiveResult.inserted;
+      const errors = progressiveResult.errors;
 
       const result: SyncResult = {
         success: true,
@@ -315,9 +315,9 @@ export class SyncService {
   }
 
   private static async storeCVEsInBackground(cves: CVE[]): Promise<{ success: number; errors: Array<{ cve_id: string; error: string }> }> {
-    // Use batch insert for much better performance
-    const batchResult = await insertCVEsBatch(cves, 500);
-    return { success: batchResult.inserted, errors: batchResult.errors };
+    // Use progressive insert for immediate visibility (starts with 10 CVEs, then grows)
+    const progressiveResult = await insertCVEsProgressive(cves);
+    return { success: progressiveResult.inserted, errors: progressiveResult.errors };
   }
 
   private static calculateETA(startTime: number, current: number, total: number): number | undefined {
