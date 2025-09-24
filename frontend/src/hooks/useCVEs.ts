@@ -20,6 +20,7 @@ export const useCVEs = (): UseCVEsReturn => {
   const [networkState, setNetworkState] = useState<NetworkState>(cveApi.getNetworkState());
   const mounted = useRef(true);
   const pollingIntervalRef = useRef<number | null>(null);
+  const autoRefreshIntervalRef = useRef<number | null>(null);
   const lastCVECount = useRef<number>(0);
 
   const fetchCVEs = useCallback(async (silent: boolean = false) => {
@@ -38,8 +39,18 @@ export const useCVEs = (): UseCVEsReturn => {
       });
 
       if (mounted.current) {
+        const newCount = data.length;
+        const previousCount = lastCVECount.current;
+
         setCVEs(data);
-        lastCVECount.current = data.length;
+        lastCVECount.current = newCount;
+
+        // Log when new CVEs are detected (useful for demo)
+        if (silent && previousCount > 0 && newCount > previousCount) {
+          const newCVEsAdded = newCount - previousCount;
+          console.log(`🔄 Auto-refresh: Found ${newCVEsAdded} new CVE(s)! Total: ${newCount}`);
+        }
+
         if (!silent) {
           setLoading('success');
         }
@@ -53,6 +64,42 @@ export const useCVEs = (): UseCVEsReturn => {
         }
         console.error('Failed to fetch CVEs:', apiError);
       }
+    }
+  }, []);
+
+  // Start polling for CVE updates during background sync
+  const startPolling = useCallback(() => {
+    if (pollingIntervalRef.current) return; // Already polling
+
+    pollingIntervalRef.current = window.setInterval(async () => {
+      if (!mounted.current) return;
+
+      try {
+        // Check sync status first
+        const syncStatus = await cveApi.getSyncStatus({
+          enableRetry: false,
+          enableCache: false
+        });
+
+        if (syncStatus.isActive) {
+          // Sync is running, fetch updated CVEs silently
+          await fetchCVEs(true);
+        } else {
+          // Sync completed, stop polling and do final fetch
+          stopPolling();
+          await fetchCVEs(true);
+        }
+      } catch (error) {
+        console.error('Error during polling:', error);
+      }
+    }, 2000); // Poll every 2 seconds
+  }, [fetchCVEs]);
+
+  // Stop polling
+  const stopPolling = useCallback(() => {
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
     }
   }, []);
 
@@ -85,41 +132,33 @@ export const useCVEs = (): UseCVEsReturn => {
     cveApi.clearCache();
   }, []);
 
-  // Start polling for CVE updates during background sync
-  const startPolling = useCallback(() => {
-    if (pollingIntervalRef.current) return; // Already polling
+  // Start auto-refresh to periodically check for new CVEs
+  const startAutoRefresh = useCallback(() => {
+    if (autoRefreshIntervalRef.current) return; // Already running
 
-    pollingIntervalRef.current = window.setInterval(async () => {
+    console.log('Starting auto-refresh for CVE data');
+
+    autoRefreshIntervalRef.current = window.setInterval(async () => {
       if (!mounted.current) return;
 
       try {
-        // Check sync status first
-        const syncStatus = await cveApi.getSyncStatus({
-          enableRetry: false,
-          enableCache: false
-        });
-
-        if (syncStatus.isRunning) {
-          // Sync is running, fetch updated CVEs silently
-          await fetchCVEs(true);
-        } else {
-          // Sync completed, stop polling and do final fetch
-          stopPolling();
-          await fetchCVEs(true);
-        }
+        // Fetch CVEs silently (without changing loading state)
+        await fetchCVEs(true);
       } catch (error) {
-        console.error('Error during polling:', error);
+        console.error('Auto-refresh failed:', error);
       }
-    }, 2000); // Poll every 2 seconds
+    }, 5000); // Refresh every 5 seconds for demo purposes
   }, [fetchCVEs]);
 
-  // Stop polling
-  const stopPolling = useCallback(() => {
-    if (pollingIntervalRef.current) {
-      clearInterval(pollingIntervalRef.current);
-      pollingIntervalRef.current = null;
+  // Stop auto-refresh
+  const stopAutoRefresh = useCallback(() => {
+    if (autoRefreshIntervalRef.current) {
+      clearInterval(autoRefreshIntervalRef.current);
+      autoRefreshIntervalRef.current = null;
+      console.log('Stopped auto-refresh for CVE data');
     }
   }, []);
+
 
   useEffect(() => {
     const unsubscribe = cveApi.onNetworkChange((state) => {
@@ -134,8 +173,9 @@ export const useCVEs = (): UseCVEsReturn => {
       unsubscribe();
       mounted.current = false;
       stopPolling();
+      stopAutoRefresh();
     };
-  }, [error, fetchCVEs, stopPolling]);
+  }, [error, fetchCVEs, stopPolling, stopAutoRefresh]);
 
   useEffect(() => {
     mounted.current = true;
@@ -149,7 +189,7 @@ export const useCVEs = (): UseCVEsReturn => {
           enableCache: false
         });
 
-        if (syncStatus.isRunning) {
+        if (syncStatus.isActive) {
           startPolling();
         }
       } catch (error) {
@@ -159,11 +199,15 @@ export const useCVEs = (): UseCVEsReturn => {
 
     checkSyncStatus();
 
+    // Start auto-refresh for continuous updates
+    startAutoRefresh();
+
     return () => {
       mounted.current = false;
       stopPolling();
+      stopAutoRefresh();
     };
-  }, [fetchCVEs, startPolling, stopPolling]);
+  }, [fetchCVEs, startPolling, stopPolling, startAutoRefresh, stopAutoRefresh]);
 
   return {
     cves,
