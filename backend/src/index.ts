@@ -12,16 +12,12 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const { PORT } = process.env;
+const PORT = process.env.PORT || '8080';
 
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' ? true : ['http://localhost:5173', 'http://localhost:5174'],
   credentials: true
 }));
-
-if (!PORT) {
-  throw new Error('PORT is not set in the environment (.env)');
-}
 
 app.use(express.json());
 
@@ -71,7 +67,7 @@ app.post('/api/cves/sync', async (req, res) => {
 
     if (background) {
       // Start background sync (non-blocking)
-      await SyncService.startBackgroundSync(process.env.NIST_API_URL);
+      await SyncService.startBackgroundSync(process.env.NIST_API_URL || 'https://services.nvd.nist.gov/rest/json/cves/2.0?cpeName=cpe:2.3:o:microsoft:windows_10:1607');
 
       res.status(202).json({
         success: true,
@@ -81,7 +77,7 @@ app.post('/api/cves/sync', async (req, res) => {
       });
     } else {
       // Traditional blocking sync
-      const syncResult = await SyncService.syncCVEData(process.env.NIST_API_URL);
+      const syncResult = await SyncService.syncCVEData(process.env.NIST_API_URL || 'https://services.nvd.nist.gov/rest/json/cves/2.0?cpeName=cpe:2.3:o:microsoft:windows_10:1607');
 
       res.status(200).json({
         success: syncResult.success,
@@ -180,7 +176,7 @@ const startServer = async () => {
     const server = app.listen(PORT, () => {
       console.log(`Server is running on http://localhost:${PORT}`);
       console.log(`Database path: ${process.env.DB_PATH || './data/cves.db'}`);
-      console.log(`NIST API URL: ${process.env.NIST_API_URL}`);
+      console.log(`NIST API URL: ${process.env.NIST_API_URL || 'https://services.nvd.nist.gov/rest/json/cves/2.0?cpeName=cpe:2.3:o:microsoft:windows_10:1607'}`);
       console.log('Available endpoints:');
       console.log('  GET  /api/health - Health check');
       console.log('  GET  /api/cves - Get all CVEs');
