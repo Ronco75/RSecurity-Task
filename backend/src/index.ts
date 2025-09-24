@@ -63,7 +63,7 @@ app.get('/api/cves', async (req, res) => {
 
 app.post('/api/cves/sync', async (req, res) => {
   try {
-    const { background = false } = req.body;
+    const { background = false } = req.body || {};
 
     if (background) {
       // Start background sync (non-blocking)
