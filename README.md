@@ -33,11 +33,11 @@ The application automatically:
 ## Application Screenshots
 
 ### Main Interface with Filtering
-![CVE Dashboard Interface](/images/cve-dashboard-interface.jpg)
+![CVE Dashboard Interface](/images/cve-grid-cards-view.jpg)
 *The main dashboard showing 2487 vulnerabilities with filtering options by severity and CVSS score range*
 
 ### CVE Details Grid View
-![CVE Cards Grid View](images/cve-grid-cards-view.jpg)
+![CVE Cards Grid View](images/cve-dashboard-interface.jpg)
 *Grid view displaying individual CVE cards with severity levels, CVSS scores, and vulnerability details*
 
 ## Features
