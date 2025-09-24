@@ -1,0 +1,142 @@
+# Environment files
+.env
+.env.*
+!.env.example
+!.env.sample
+
+# Logs
+logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Dependencies
+node_modules/
+bower_components/
+.pnpm-store/
+.pnp.*
+.npm/
+.yarn/
+.yarn/cache/
+.yarn/unplugged/
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+# Build outputs
+build/
+dist/
+out/
+tmp/
+.temp/
+.cache/
+.parcel-cache/
+.ncc_build/
+.next/
+.nuxt/
+.svelte-kit/
+.turbo/
+.vite/
+
+# Coverage
+coverage/
+.nyc_output/
+lib-cov/
+*.lcov
+
+# Lint/Caches
+.eslintcache
+.stylelintcache
+
+# OS files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Editors/IDEs
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+.idea/
+*.iml
+.vscode-test/
+.history
+.localhistory
+.vs/
+
+# Framework/hosting
+.serverless/
+.vercel/
+.firebase/
+.netlify/
+
+# Databases
+*.sqlite
+*.sqlite3
+/db.sqlite3
+*.db-journal
+*.db-shm
+*.db-wal
+backend/data/cves.db
+
+# Docker
+.docker/
+.dockerignore
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+
+# Languages
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+.eggs/
+.venv/
+venv/
+env/
+.ipynb_checkpoints/
+
+# Java/Gradle/Maven
+.gradle/
+target/
+*.class
+
+# .NET
+bin/
+obj/
+*.user
+*.suo
+
+# Go
+bin/
+pkg/
+*.test
+
+# Rust
+# Keep Cargo.lock in VCS for applications; ignore build dir
+/target/
+
+# Secrets
+*.key
+*.pem
+*.p12
+*.cer
+*.der
+
+# AI tools
+.claude/
+CLAUDE.md
+.playwright-mcp/
+
+.gitignore
