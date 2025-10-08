@@ -11,6 +11,14 @@ import type {
 } from '../types/cve';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+
+// Log API configuration for debugging
+if (import.meta.env.DEV) {
+  console.log('🔧 API Configuration:');
+  console.log(`   Environment: ${import.meta.env.MODE}`);
+  console.log(`   API Base URL: ${API_BASE_URL}`);
+  console.log(`   VITE_API_BASE_URL: ${import.meta.env.VITE_API_BASE_URL || 'Not set'}`);
+}
 const DEFAULT_TIMEOUT = 10000;
 const MAX_RETRY_ATTEMPTS = 3;
 const CACHE_TIMEOUT = 5 * 60 * 1000; // 5 minutes

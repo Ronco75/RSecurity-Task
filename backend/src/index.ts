@@ -15,7 +15,7 @@ const app = express();
 const PORT = process.env.PORT || '8080';
 
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' ? true : ['http://localhost:5173', 'http://localhost:5174'],
+  origin: process.env.NODE_ENV === 'production' ? true : ['https://glistening-rejoicing-production.up.railway.app', 'http://localhost:5173', 'http://localhost:5174'],
   credentials: true
 }));
 
@@ -155,14 +155,14 @@ const startServer = async () => {
   try {
     // Initialize database
     await initDB();
-    console.log('Database initialized successfully');
+    console.log('🗄  Database initialized successfully');
 
     // Check if database needs initial population and start background sync
     try {
       const performedBackgroundSync = await SyncService.performBackgroundStartupSync();
       if (performedBackgroundSync) {
-        console.log('Background sync started - CVE data will be populated progressively');
-        console.log('Server is immediately available while sync runs in background');
+        console.log('🔄 Background sync started - CVE data will be populated progressively');
+        console.log('⚡ Server is immediately available while sync runs in background');
       }
     } catch (syncError) {
       console.warn('Background sync failed to start, but server will continue:', syncError);
@@ -174,18 +174,22 @@ const startServer = async () => {
 
     // Start the server
     const server = app.listen(PORT, () => {
-      console.log(`Server is running on http://localhost:${PORT}`);
-      console.log(`Database path: ${process.env.DB_PATH || './data/cves.db'}`);
-      console.log(`NIST API URL: ${process.env.NIST_API_URL || 'https://services.nvd.nist.gov/rest/json/cves/2.0?cpeName=cpe:2.3:o:microsoft:windows_10:1607'}`);
-      console.log('Available endpoints:');
+      console.log('🚀 CVE Dashboard Server Started Successfully');
+      console.log('='.repeat(50));
+      console.log(`📡 Server URL: http://localhost:${PORT}`);
+      console.log(`🗄  Database: ${process.env.DB_PATH || './data/cves.db'}`);
+      console.log(`🌐 NIST API: ${process.env.NIST_API_URL || 'https://services.nvd.nist.gov/rest/json/cves/2.0?cpeName=cpe:2.3:o:microsoft:windows_10:1607'}`);
+      console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log('='.repeat(50));
+      console.log('📋 Available API Endpoints:');
       console.log('  GET  /api/health - Health check');
       console.log('  GET  /api/cves - Get all CVEs');
       console.log('  POST /api/cves/sync - Sync CVE data from NIST API (blocking)');
       console.log('  POST /api/cves/sync {"background": true} - Start background sync (non-blocking)');
       console.log('  GET  /api/cves/sync/status - Get sync status and progress');
-      console.log('');
-      console.log('✅ Server is immediately available for requests');
-      console.log('🔄 Background sync runs independently if database was empty');
+      console.log('='.repeat(50));
+      console.log('✅ Server is ready to accept requests');
+      console.log('🔄 Background sync is running independently');
     });
 
     // Handle graceful shutdown
