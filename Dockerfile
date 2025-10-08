@@ -47,8 +47,8 @@ COPY --from=frontend-build /app/frontend/dist ./public
 # Install only production dependencies
 RUN npm ci --only=production && npm cache clean --force
 
-# Create backend/data directory for SQLite database
-RUN mkdir -p ./backend/data && chown -R appuser:nodejs ./backend/data
+# Create data directory for SQLite database 
+RUN mkdir -p ./data && chown -R appuser:nodejs ./data
 
 # Switch to non-root user
 USER appuser
