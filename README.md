@@ -11,6 +11,10 @@ A full-stack web application that fetches CVE data from NIST API, stores it in S
 - ✅ Docker containerization on port 8080
 - ✅ Smooth data presentation with filtering and responsive design
 
+## Live Demo
+
+The application is deployed and running at: **https://rsecurity-task-production.up.railway.app/**
+
 ## Quick Start
 
 ```bash
